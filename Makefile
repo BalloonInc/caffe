@@ -181,7 +181,7 @@ ifneq ($(CPU_ONLY), 1)
 	LIBRARIES := cudart cublas curand
 endif
 
-LIBRARIES += glog gflags protobuf boost_system boost_filesystem m
+LIBRARIES += glog gflags protobuf boost_system boost_filesystem boost_regex m
 
 # handle IO dependencies
 USE_LEVELDB ?= 1
@@ -206,6 +206,10 @@ ifeq ($(USE_OPENCV), 1)
 	ifeq ($(OPENCV_VERSION), 3)
 		LIBRARIES += opencv_imgcodecs
 	endif
+	ifeq ($(OPENCV_VERSION), 4)
+		LIBRARIES += opencv_imgcodecs
+	endif
+
 
 endif
 PYTHON_LIBRARIES ?= boost_python python3

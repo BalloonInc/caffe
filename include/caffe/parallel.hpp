@@ -117,6 +117,42 @@ class NCCL : public GPUParams<Dtype>,
   using Params<Dtype>::diff_;
 };
 
+// Synchronous data parallelism using map-reduce between local GPUs.
+template<typename Dtype>
+class P2PSync : public GPUParams<Dtype>, public Solver<Dtype>::Callback,
+    public InternalThread {
+ public:
+  explicit P2PSync(shared_ptr<Solver<Dtype> > root_solver,
+                   P2PSync<Dtype>* parent, const SolverParameter& param);
+  virtual ~P2PSync();
+
+  inline const shared_ptr<Solver<Dtype> >& solver() const {
+    return solver_;
+  }
+
+  void Run(const vector<int>& gpus);
+  void Prepare(const vector<int>& gpus,
+               vector<shared_ptr<P2PSync<Dtype> > >* syncs);
+  inline int initial_iter() const { return initial_iter_; }
+
+ protected:
+  void on_start();
+  void on_gradients_ready();
+
+  void InternalThreadEntry();
+
+  P2PSync<Dtype>* parent_;
+  vector<P2PSync<Dtype>*> children_;
+  BlockingQueue<P2PSync<Dtype>*> queue_;
+  const int initial_iter_;
+  Dtype* parent_grads_;
+  shared_ptr<Solver<Dtype> > solver_;
+
+  using Params<Dtype>::size_;
+  using Params<Dtype>::data_;
+  using Params<Dtype>::diff_;
+};
+
 }  // namespace caffe
 
 #endif  // USE_NCCL
